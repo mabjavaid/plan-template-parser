@@ -8,10 +8,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use League\Flysystem\Filesystem;
 
 class GenerateFilesJob implements ShouldQueue
 {
@@ -31,13 +29,7 @@ class GenerateFilesJob implements ShouldQueue
         $this->makeFileInGivenPath($path, $className, $modelContent);
     }
 
-    /**
-     * Build the directory for the class if necessary.
-     *
-     * @param  string  $path
-     * @return string
-     */
-    protected function makeDirectory($path)
+    protected function makeDirectory(string $path): string
     {
         $models = __DIR__ . '/../Models/';
         $path = $models . Str::of($path)->replace('\\', '/');
@@ -48,33 +40,17 @@ class GenerateFilesJob implements ShouldQueue
         return $path;
     }
 
-    /**
-     * Build the directory for the class if necessary.
-     *
-     * @param  string  $path
-     * @return bool
-     */
     protected function makeFileInGivenPath(string $path, $className, $modelContent): bool
     {
         return File::put($path . '/' . $className . '.php', $modelContent);
     }
 
-    /**
-     * Return the stub file path
-     * @return string
-     *
-     */
-    public function getStubPath()
+    protected function getStubPath(): string
     {
         return base_path('app/Jobs/stubs') . '/model-tamplate.stub';
     }
 
-    /**
-     * Return the stub file path
-     * @return array
-     *
-     */
-    public function className($className): array
+    protected function className(string $className): array
     {
         $className = $this->getSortedDirName($className);
         $tableName = Str::of($className)->snake();
@@ -83,12 +59,7 @@ class GenerateFilesJob implements ShouldQueue
         return [$tableName, $className];
     }
 
-    /**
-     * Return the stub file path
-     * @return string
-     *
-     */
-    public function getNameSpace($namespace): string
+    protected function getNameSpace(array $namespace): string
     {
         $dirName = collect($namespace)->map(function ($dirName) {
             return $this->getSortedDirName($dirName);
@@ -97,18 +68,12 @@ class GenerateFilesJob implements ShouldQueue
         return implode ("\\", $dirName);
     }
 
-    private function getSortedDirName($dirName)
+    protected function getSortedDirName(string $dirName): string
     {
         return ucfirst(Str::camel($dirName));
     }
-    /**
-     **
-     * Map the stub variables present in stub to its value
-     *
-     * @return array
-     *
-     */
-    public function getStubVariables($nameSpace, $className, $tableName)
+
+    protected function getStubVariables(string $nameSpace, string $className, string $tableName): array
     {
         return [
             '{namespace}'         => 'App\\Models\\' . $nameSpace,
@@ -117,27 +82,12 @@ class GenerateFilesJob implements ShouldQueue
         ];
     }
 
-
-    /**
-     * Get the stub path and the stub variables
-     *
-     * @return bool|mixed|string
-     *
-     */
-    public function getSourceFile($stubVariables)
+    protected function getSourceFile(array $stubVariables): string
     {
         return $this->getStubContents($this->getStubPath(), $stubVariables);
     }
 
-
-    /**
-     * Replace the stub variables(key) with the desire value
-     *
-     * @param $stub
-     * @param array $stubVariables
-     * @return bool|mixed|string
-     */
-    public function getStubContents($stub , $stubVariables = [])
+    protected function getStubContents($stub , $stubVariables = []): string
     {
         $contents = file_get_contents($stub);
         foreach ($stubVariables as $search => $replace)
